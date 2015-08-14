@@ -26,7 +26,6 @@ index 52f338b..b7def08 100644
      )
 
 -------------------------------------------------------
-
 """
 
 from xblock.field_data import FieldData
@@ -35,14 +34,27 @@ from injectx.injector import Injector
 
 
 class FieldDataInjector(FieldData):
-    DONTTOUCH = set("""
-        SequenceDescriptor.start SequenceDescriptor.due
-        CourseDescriptor.start CourseDescriptor.due
-        """.split())
+
+    INJECTOR = Injector(
+        hints={
+            'SequenceDescriptor.start': { 'type': 'date' },
+            'SequenceDescriptor.due': { 'type': 'date' },
+            'CourseDescriptor.start': { 'type': 'date' },
+            'CourseDescriptor.due': { 'type': 'date' },
+
+            'CourseInfoModule.data': { 'type': 'html' },
+            'HtmlModule.data': { 'type': 'html' },
+
+            'SequenceDescriptor.format': { 'knownbad': True },
+
+            'VideoModule.youtube_id_1_0':  { 'knownbad': True },
+            'VideoModule.youtube_id_1_25':  { 'knownbad': True },
+            'VideoModule.youtube_id_1_5':  { 'knownbad': True },
+        },
+    )
 
     def __init__(self, field_data):
         self.field_data = field_data
-        self.injector = Injector(skip=self.DONTTOUCH)
 
     def get(self, block, name):
         val = self.field_data.get(block, name)
@@ -50,7 +62,7 @@ class FieldDataInjector(FieldData):
         if class_name.endswith("WithMixins"):
             class_name = class_name[:-len("WithMixins")]
         name = class_name + "." + name
-        val = self.injector.munge(name, val)
+        val = self.INJECTOR.munge(name, val)
         return val
 
     def has(self, block, name):
